@@ -14,19 +14,19 @@
 #include <vector>
 
 class PmergeMe {
-  std::vector<std::size_t> vec;
-  std::list<std::size_t> ls;
-
 public:
-  void display_vec(std::string const *const) throw(std::runtime_error);
-
   PmergeMe();
-  PmergeMe(size_t, char **) throw(std::invalid_argument);
   PmergeMe(PmergeMe const &);
   ~PmergeMe();
 
   PmergeMe &operator=(PmergeMe const &);
-  void sort() throw(std::runtime_error);
+  virtual void phantom() = 0;
+  std::pair<std::vector<size_t>, std::list<size_t> >
+  parse(size_t, char **) throw(std::invalid_argument);
+  static void display_vec(std::vector<size_t> const &,
+                          std::string const *const) throw(std::runtime_error);
+  static std::vector<size_t>
+  sort(std::vector<size_t> const &) throw(std::runtime_error);
 };
 
 template <typename T>
