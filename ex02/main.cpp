@@ -10,7 +10,8 @@ int main(int argc, char **argv) {
   }
   try {
     PmergeMe merg(static_cast<std::size_t>(argc), argv);
-    merg.display_vec();
+    std::string pre("Before: ");
+    merg.display_vec(&pre);
   } catch (std::exception &e) {
     std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
     return 1;
