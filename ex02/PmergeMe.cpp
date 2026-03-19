@@ -62,29 +62,62 @@ void PmergeMe::display_vec(
   std::cout << std::endl;
 }
 
-std::vector<size_t>
-PmergeMe::sort(std::vector<size_t> const &vec) throw(std::runtime_error) {
+void PmergeMe::sort(std::vector<size_t> &vec) {
   if (vec.size() < 2) {
-    return vec;
+    return;
   }
   size_t i = 0, j = 0;
-  std::vector<std::pair<size_t, size_t> > main_chain(
+  std::vector<PmergeMe::MainChainRef> main_chain(
       static_cast<size_t>(std::floor(vec.size() / 2)));
-  size_t last(*(--vec.end()));
-  for (std::vector<size_t>::const_iterator it = vec.begin(); it != vec.end();
+  for (std::vector<size_t>::iterator it = vec.begin(); it != vec.end();
        it++, i++) {
     if (++it == vec.end()) {
       break;
     }
-    main_chain[i].first = *(--it);
-    main_chain[i].second = *(++it);
-    if (main_chain[i].first > main_chain[i].second) {
-      j = main_chain[i].first;
-      main_chain[i].first = main_chain[i].second;
-      main_chain[i].second = j;
+    main_chain[i] =
+        PmergeMe::MainChainRef(*(--it), static_cast<size_t>(it - vec.begin()));
+    if (main_chain[i].getMain() > *(++it)) {
+      j = main_chain[i].getMain();
+      main_chain[i] =
+          PmergeMe::MainChainRef(*it, static_cast<size_t>(it - vec.begin()));
+      *it = j;
     }
   }
   if (main_chain.size() >= 2) {
-    main_chain = PmergeMe::sort(main_chain);
+    PmergeMe::sort_refs(main_chain);
+  }
+  // TODO: insert subchain into main chain
+}
+
+void PmergeMe::sort_refs(std::vector<MainChainRef> &refs) {
+  if (refs.size() < 2) {
+    return;
+  } else if (refs.size() == 2) {
+    if (refs[0] > refs[1]) {
+      refs[0].setAfterIdx(refs[1].getBeforeIdx());
+      refs[1].setAfterIdx(refs[0].getBeforeIdx());
+    }
+  } else {
+    std::vector<PmergeMe::MainChainRef> chain(
+        static_cast<size_t>(std::floor(refs.size() / 2)));
+    std::vector<PmergeMe::MainChainRef> remnants;
+    std::vector<PmergeMe::MainChainRef>::iterator last(--refs.end());
+    size_t i = 0;
+    std::vector<PmergeMe::MainChainRef>::iterator it;
+    for (it = refs.begin(); it != refs.end(); it++, i++) {
+      if (++it == refs.end()) {
+        --it;
+        break;
+      }
+      chain[i] = PmergeMe::MainChainRef(*(--it));
+      PmergeMe::MainChainRef temp(*(++it));
+      if (chain[i].getMain() > it->getMain()) {
+        temp = chain[i];
+        chain[i] = *it;
+        *it = temp;
+      }
+      remnants.push_back(temp);
+    }
+    if (it != refs.end()) {}
   }
 }

@@ -25,8 +25,32 @@ public:
   parse(size_t, char **) throw(std::invalid_argument);
   static void display_vec(std::vector<size_t> const &,
                           std::string const *const) throw(std::runtime_error);
-  static std::vector<size_t>
-  sort(std::vector<size_t> const &) throw(std::runtime_error);
+  static void sort(std::vector<size_t> &);
+
+  class MainChainRef {
+    size_t main;
+    size_t beforeIdx;
+    ssize_t afterIdx;
+
+  public:
+    MainChainRef() throw(std::domain_error);
+    MainChainRef(size_t, size_t);
+    MainChainRef(MainChainRef const &);
+    ~MainChainRef();
+
+    MainChainRef &operator=(MainChainRef const &);
+    bool operator==(MainChainRef const &) const;
+    bool operator<(MainChainRef const &) const;
+    bool operator<=(MainChainRef const &) const;
+    bool operator>(MainChainRef const &) const;
+    bool operator>=(MainChainRef const &) const;
+    size_t getMain() const;
+    size_t getAfterIdx() const;
+    void setAfterIdx(size_t);
+    size_t getBeforeIdx() const;
+  };
+
+  static void sort_refs(std::vector<MainChainRef> &);
 };
 
 template <typename T>
