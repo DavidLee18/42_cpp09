@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 class PmergeMe {
@@ -27,30 +28,24 @@ public:
                           std::string const *const) throw(std::runtime_error);
   static void sort(std::vector<size_t> &);
 
-  class MainChainRef {
-    size_t main;
-    size_t beforeIdx;
-    ssize_t afterIdx;
+  class ChainRef {
+    size_t &main;
 
   public:
-    MainChainRef() throw(std::domain_error);
-    MainChainRef(size_t, size_t);
-    MainChainRef(MainChainRef const &);
-    ~MainChainRef();
+    size_t idx;
+    ChainRef(size_t &, size_t);
+    ChainRef(ChainRef const &);
+    ~ChainRef();
 
-    MainChainRef &operator=(MainChainRef const &);
-    bool operator==(MainChainRef const &) const;
-    bool operator<(MainChainRef const &) const;
-    bool operator<=(MainChainRef const &) const;
-    bool operator>(MainChainRef const &) const;
-    bool operator>=(MainChainRef const &) const;
-    size_t getMain() const;
-    size_t getAfterIdx() const;
-    void setAfterIdx(size_t);
-    size_t getBeforeIdx() const;
+    ChainRef &operator=(ChainRef const &);
+    bool operator==(ChainRef const &) const;
+    bool operator<(ChainRef const &) const;
+    bool operator<=(ChainRef const &) const;
+    bool operator>(ChainRef const &) const;
+    bool operator>=(ChainRef const &) const;
   };
 
-  static void sort_refs(std::vector<MainChainRef> &);
+  static void sort_chains(std::vector<std::pair<ChainRef, ChainRef> > &);
 };
 
 template <typename T>
