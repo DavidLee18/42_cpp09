@@ -1,4 +1,5 @@
 #include "PmergeMe.hpp"
+#include <algorithm>
 #include <asm/termbits.h>
 #include <cerrno>
 #include <cmath>
@@ -16,7 +17,7 @@
 
 PmergeMe::PmergeMe() {}
 
-std::pair<std::vector<size_t>, std::list<size_t>>
+std::pair<std::vector<size_t>, std::list<size_t> >
 PmergeMe::parse(size_t argc, char **argv) throw(std::invalid_argument) {
   std::vector<size_t> vec(argc - 1);
   std::list<size_t> ls(argc - 1);
@@ -68,13 +69,13 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
   }
   size_t whole_len = vec.size(),
          half_len = static_cast<size_t>(std::floor(whole_len / 2));
-  std::vector<std::pair<PmergeMe::ChainRef, PmergeMe::ChainRef>> chain;
+  std::vector<std::pair<size_t *, size_t *> > chain;
   chain.reserve(half_len);
   for (size_t i = 0; i < half_len; i++) {
     if (vec[2 * i] <= vec[2 * i + 1]) {
-      chain[i] = std::make_pair(vec[2 * i], vec[2 * i + 1]);
+      chain.push_back(std::make_pair(&vec[2 * i], &vec[2 * i + 1]));
     } else {
-      chain[i] = std::make_pair(vec[2 * i + 1], vec[2 * i]);
+      chain.push_back(std::make_pair(&vec[2 * i], &vec[2 * i + 1]));
     }
   }
   if (chain.size() >= 2) {
@@ -83,12 +84,50 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
   // TODO: insert subchain into main chain
 }
 
-void PmergeMe::sort_chains(std::vector<std::pair<ChainRef, ChainRef>> &chain) {
+void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
   if (chain.size() < 2) {
     return;
-  } else {
-    size_t whole_len = chain.size(),
-           half_len = static_cast<size_t>(std::floor(whole_len / 2));
-    std::vector<std::pair<PmergeMe::ChainRef, PmergeMe::ChainRef>> subchain;
   }
+  const size_t whole_len = chain.size(),
+               half_len = static_cast<size_t>(std::floor(whole_len / 2));
+  std::vector<std::pair<size_t *, size_t *> > subchain;
+  for (size_t i = 0; i < half_len; i++) {
+    if (*(chain[2 * i].second) <= *(chain[2 * i + 1].second)) {
+      subchain.push_back(
+          std::make_pair(chain[2 * i].second, chain[2 * i + 1].second));
+    } else {
+      subchain.push_back(
+          std::make_pair(chain[2 * i + 1].second, chain[2 * i].second));
+    }
+  }
+  if (subchain.size() >= 2) {
+    PmergeMe::sort_chains(subchain);
+  }
+  std::vector<std::pair<size_t *, size_t *> > res;
+  res.reserve(whole_len);
+  for (size_t i = 0; i < half_len; i++) {
+    for (size_t j = 0; j < whole_len; j++) {
+      if (chain[j].second == subchain[i].second) {
+        res.push_back(chain[j]);
+        break;
+      }
+    }
+  }
+  for (size_t i = 1;; i++) {
+    for (size_t j = std::min(PmergeMe::get_nth_jacobsthal(i), whole_len);
+         j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
+      PmergeMe::binary_insert(res, 0, j);
+    }
+    if (PmergeMe::get_nth_jacobsthal(i) >= whole_len) {
+      break;
+    }
+  }
+  if (whole_len % 2 == 1) {
+    PmergeMe::binary_insert(res, 0, res.size() - 1);
+  }
+  chain = res;
+}
+
+size_t PmergeMe::get_nth_jacobsthal(size_t n) {
+  return static_cast<size_t>((std::pow(2, n + 1) + std::pow(-1, n)) / 3);
 }

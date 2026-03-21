@@ -15,6 +15,11 @@
 #include <vector>
 
 class PmergeMe {
+  static void binary_insert(std::vector<std::pair<size_t *, size_t *> > &,
+                            size_t, size_t); // TODO
+  static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
+  static size_t get_nth_jacobsthal(size_t);
+
 public:
   PmergeMe();
   PmergeMe(PmergeMe const &);
@@ -27,25 +32,6 @@ public:
   static void display_vec(std::vector<size_t> const &,
                           std::string const *const) throw(std::runtime_error);
   static void sort(std::vector<size_t> &);
-
-  class ChainRef {
-    size_t &main;
-
-  public:
-    size_t idx;
-    ChainRef(size_t &, size_t);
-    ChainRef(ChainRef const &);
-    ~ChainRef();
-
-    ChainRef &operator=(ChainRef const &);
-    bool operator==(ChainRef const &) const;
-    bool operator<(ChainRef const &) const;
-    bool operator<=(ChainRef const &) const;
-    bool operator>(ChainRef const &) const;
-    bool operator>=(ChainRef const &) const;
-  };
-
-  static void sort_chains(std::vector<std::pair<ChainRef, ChainRef> > &);
 };
 
 template <typename T>
