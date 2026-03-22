@@ -81,29 +81,22 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
   std::vector<size_t> res;
 
   for (size_t i = 0; i < vec.size() / 2 && i < chain.size(); i++) {
-    for (size_t j = 0; j < vec.size(); j++) {
-      if (&vec[j] == chain[i].second) {
-        res.push_back(vec[j]);
-        break;
-      }
-    }
+    res.push_back(*(chain[i].second));
   }
 
-  for (size_t i = 1;; i++) {
+  for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= chain.size(); i++) {
     for (size_t j = PmergeMe::get_nth_jacobsthal(i);
          j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
-      for (size_t k = 0; k < vec.size(); k++) {
-        if (&vec[k] == chain[std::min(j - 1, chain.size() - 1)].first) {
-          PmergeMe::binary_insert(res, vec[k], 0,
-                                  std::min(j - 1, res.size() - 1));
-          break;
-        }
-      }
+      std::vector<size_t>::iterator it = std::lower_bound(
+          res.begin(), res.begin() + j - 1, *(chain[j - 1].first));
+      res.insert(it, *(chain[j - 1].first));
     }
   }
 
   if (vec.size() % 2 == 1) {
-    PmergeMe::binary_insert(res, *vec.end(), 0, res.size() - 1);
+    std::vector<size_t>::iterator it =
+        std::lower_bound(res.begin(), res.end() - 1, vec.back());
+    res.insert(it, vec.back());
   }
   vec.swap(res);
 }
@@ -139,79 +132,24 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
          j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
       for (size_t k = 0; k < chain.size(); k++) {
         if (chain[k].second == subchain[j - 1].first) {
-          PmergeMe::binary_insert(res, chain[k], 0,
-                                  std::min(j - 1, res.size() - 1));
+          std::vector<std::pair<size_t *, size_t *> >::iterator it =
+              std::lower_bound(res.begin(),
+                               res.begin() + std::min(j - 1, res.size() - 1),
+                               chain[k]);
+          res.insert(it, chain[k]);
           break;
         }
       }
     }
   }
   if (chain.size() % 2 == 1) {
-    PmergeMe::binary_insert(res, chain[chain.size() - 1], 0, res.size() - 1);
+    std::vector<std::pair<size_t *, size_t *> >::iterator it =
+        std::lower_bound(res.begin(), res.end() - 1, chain.back());
+    res.insert(it, chain.back());
   }
   chain.swap(res);
 }
 
 size_t PmergeMe::get_nth_jacobsthal(size_t n) {
   return static_cast<size_t>((std::pow(2, n + 1) + std::pow(-1, n)) / 3);
-}
-
-void PmergeMe::binary_insert(std::vector<std::pair<size_t *, size_t *> > &chain,
-                             std::pair<size_t *, size_t *> const &item,
-                             size_t from, size_t to) {
-  const size_t mid = static_cast<size_t>(std::floor((from + to) / 2));
-  std::vector<std::pair<size_t *, size_t *> >::iterator it = chain.begin();
-  for (size_t i = 0; i < mid && it != chain.end(); i++) {
-    it++;
-  }
-  if (it == chain.end()) {
-    it--;
-  }
-  if (*(it->second) > *(item.second)) {
-    if (mid == from) {
-      chain.insert(it, item);
-    } else {
-      PmergeMe::binary_insert(chain, item, from, mid);
-    }
-  } else {
-    if (++it == chain.end()) {
-      chain.push_back(item);
-    } else if (mid == to) {
-      chain.insert(it, item);
-    } else {
-      PmergeMe::binary_insert(chain, item, mid, to);
-    }
-  }
-}
-
-void PmergeMe::binary_insert(std::vector<size_t> &vec, size_t const &item,
-                             size_t from, size_t to) {
-  const size_t mid = static_cast<size_t>(std::floor((from + to) / 2));
-  std::vector<size_t>::iterator it = vec.begin();
-  for (size_t i = 0; i < mid && it != vec.end(); i++) {
-    it++;
-  }
-  if (it == vec.end()) {
-    --it;
-  }
-  if (*it > item) {
-    if (mid == from) {
-      vec.insert(it, item);
-    } else {
-      PmergeMe::binary_insert(vec, item, from, mid);
-    }
-  } else {
-    if (mid == to) {
-      for (size_t i = mid; i < to + 1 && it != vec.end(); i++) {
-        ++it;
-      }
-      if (it == vec.end()) {
-        vec.push_back(item);
-      } else {
-        vec.insert(it, item);
-      }
-    } else {
-      PmergeMe::binary_insert(vec, item, mid, to);
-    }
-  }
 }
