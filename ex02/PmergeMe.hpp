@@ -16,7 +16,10 @@
 
 class PmergeMe {
   static void binary_insert(std::vector<std::pair<size_t *, size_t *> > &,
-                            size_t, size_t); // TODO
+                            std::pair<size_t *, size_t *> const &, size_t,
+                            size_t); // TODO
+  static void binary_insert(std::vector<size_t> &, size_t const &, size_t,
+                            size_t);
   static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
   static size_t get_nth_jacobsthal(size_t);
 
@@ -27,7 +30,7 @@ public:
 
   PmergeMe &operator=(PmergeMe const &);
   virtual void phantom() = 0;
-  std::pair<std::vector<size_t>, std::list<size_t> >
+  static std::pair<std::vector<size_t>, std::list<size_t> >
   parse(size_t, char **) throw(std::invalid_argument);
   static void display_vec(std::vector<size_t> const &,
                           std::string const *const) throw(std::runtime_error);

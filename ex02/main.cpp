@@ -9,9 +9,13 @@ int main(int argc, char **argv) {
     return 1;
   }
   try {
-    PmergeMe merg(static_cast<std::size_t>(argc), argv);
+    std::pair<std::vector<size_t>, std::list<size_t> > vec_ls =
+        PmergeMe::parse(static_cast<std::size_t>(argc), argv);
     std::string pre("Before: ");
-    merg.display_vec(&pre);
+    PmergeMe::display_vec(vec_ls.first, &pre);
+    PmergeMe::sort(vec_ls.first);
+    pre = "After: ";
+    PmergeMe::display_vec(vec_ls.first, &pre);
   } catch (std::exception &e) {
     std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
     return 1;
