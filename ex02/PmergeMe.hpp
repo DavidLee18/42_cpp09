@@ -1,9 +1,10 @@
 #ifndef PMERGE_ME_H
 #define PMERGE_ME_H
 
+#ifdef __linux__
 #include <asm/termbits.h>
+#endif
 #include <cerrno>
-#include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <list>
@@ -15,11 +16,6 @@
 #include <vector>
 
 class PmergeMe {
-  static void binary_insert(std::vector<std::pair<size_t *, size_t *> > &,
-                            std::pair<size_t *, size_t *> const &, size_t,
-                            size_t); // TODO
-  static void binary_insert(std::vector<size_t> &, size_t const &, size_t,
-                            size_t);
   static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
   static size_t get_nth_jacobsthal(size_t);
 
@@ -33,7 +29,7 @@ public:
   static std::pair<std::vector<size_t>, std::list<size_t> >
   parse(size_t, char **) throw(std::invalid_argument);
   static void display_vec(std::vector<size_t> const &,
-                          std::string const *const) throw(std::runtime_error);
+                          std::string const *) throw(std::runtime_error);
   static void sort(std::vector<size_t> &);
 };
 
