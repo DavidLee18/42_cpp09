@@ -118,7 +118,9 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
 
   for (size_t i = 0; i < chain.size(); i++) {
     if (chain[i].second == subchain[0].first) {
-      res.insert(std::lower_bound(res.begin(), res.begin()+1, chain[i], ChainCmp()), chain[i]);
+      res.insert(std::lower_bound(res.begin(),
+                                  res.begin() + static_cast<std::vector<std::pair<size_t *, size_t
+                                    *> >::difference_type>(1), chain[i], ChainCmp()), chain[i]);
       break;
     }
   }
