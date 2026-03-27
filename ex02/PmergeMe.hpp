@@ -31,25 +31,30 @@ public:
   static void display_vec(std::vector<size_t> const &,
                           std::string const *) throw(std::runtime_error);
   static void sort(std::vector<size_t> &);
-};
 
-template <typename T>
+    template <typename T> static
 std::ostringstream &try_print(std::ostringstream &oss, T val) {
-  struct winsize ws;
-  if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
-    oss << "failed to get terminal window size: ";
-    oss << std::strerror(errno);
-    throw std::runtime_error(oss.str());
-  }
-  std::string curr(oss.str());
-  oss << val;
-  if (oss.str().size() > ws.ws_col) {
-    std::cout << curr << std::endl;
-    oss.str("");
-    oss.clear();
-    oss << "    " << val;
-  }
-  return oss;
-}
+        struct winsize ws;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
+            oss << "failed to get terminal window size: ";
+            oss << std::strerror(errno);
+            throw std::runtime_error(oss.str());
+        }
+        const std::string curr(oss.str());
+        oss << val;
+        if (oss.str().size() > ws.ws_col) {
+            std::cout << curr << std::endl;
+            oss.str("");
+            oss.clear();
+            oss << "    " << val;
+        }
+        return oss;
+    }
+
+    struct ChainCmp {
+        bool operator()(const std::pair<size_t *, size_t *> &a,
+                       const std::pair<size_t *, size_t *> &b) const;
+    };
+};
 
 #endif

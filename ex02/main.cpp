@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
     PmergeMe::sort(vec_ls.first);
     pre = "After: ";
     PmergeMe::display_vec(vec_ls.first, &pre);
+    std::cout << vec_ls.first.size() << std::endl;
   } catch (std::exception &e) {
     std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
     return 1;

@@ -1,5 +1,5 @@
 CXX := c++
-CXXFLAGS := -Wall -Werror -Wextra -Wconversion -O3 -g -std=c++98
+CXXFLAGS := -Wall -Werror -Wextra -Wconversion -O3 -std=c++98
 NAME := PmergeMe
 
 SRCS := PmergeMe.cpp main.cpp
@@ -21,4 +21,4 @@ fclean:	clean
 
 re:	fclean all
 
-.PNONY: all clean fclean re bonus rebo
+.PHONY: all clean fclean re
