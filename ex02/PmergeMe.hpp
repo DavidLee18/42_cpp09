@@ -4,36 +4,44 @@
 #ifdef __linux__
 #include <asm/termbits.h>
 #endif
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstring>
 #include <iostream>
 #include <list>
 #include <sstream>
 #include <stdexcept>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
 class PmergeMe {
-  static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
-  static size_t get_nth_jacobsthal(size_t);
+    static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
+
+    static size_t get_nth_jacobsthal(size_t);
 
 public:
-  PmergeMe();
-  PmergeMe(PmergeMe const &);
-  ~PmergeMe();
+    PmergeMe();
 
-  PmergeMe &operator=(PmergeMe const &);
-  virtual void phantom() = 0;
-  static std::pair<std::vector<size_t>, std::list<size_t> >
-  parse(size_t, char **) throw(std::invalid_argument);
-  static void display_vec(std::vector<size_t> const &,
-                          std::string const *) throw(std::runtime_error);
-  static void sort(std::vector<size_t> &);
+    PmergeMe(PmergeMe const &);
 
-    template <typename T> static
-std::ostringstream &try_print(std::ostringstream &oss, T val) {
+    ~PmergeMe();
+
+    PmergeMe &operator=(PmergeMe const &);
+
+    virtual void phantom() = 0;
+
+    static std::pair<std::vector<size_t>, std::list<size_t> >
+    parse(size_t, char **) throw(std::invalid_argument);
+
+    static void display_vec(std::vector<size_t> const &,
+                            std::string const *) throw(std::runtime_error);
+
+    static void sort(std::vector<size_t> &);
+
+    template<typename T>
+    static std::ostringstream &try_print(std::ostringstream &oss, T val) {
         struct winsize ws;
         if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
             oss << "failed to get terminal window size: ";
@@ -53,7 +61,7 @@ std::ostringstream &try_print(std::ostringstream &oss, T val) {
 
     struct ChainCmp {
         bool operator()(const std::pair<size_t *, size_t *> &a,
-                       const std::pair<size_t *, size_t *> &b) const;
+                        const std::pair<size_t *, size_t *> &b) const;
     };
 };
 
