@@ -96,12 +96,9 @@ void BitcoinExchange::calcPrice(std::string const &filePath) {
       } else {
         float scl = NAN;
         const std::time_t t = std::mktime(&tm);
-        for (std::map<std::time_t, float>::iterator it = db.begin();
-             it != db.end(); it++) {
-          if (t < (*it).first) {
-            scl = (*(--it)).second;
-            break;
-          }
+        std::map<std::time_t, float>::iterator it = db.lower_bound(t);
+        if (it != db.begin()) {
+            scl = (--it)->second;
         }
         if (std::isnan(scl)) {
           std::cerr << "no value for date: " << year << '-' << std::setw(2)
@@ -110,7 +107,8 @@ void BitcoinExchange::calcPrice(std::string const &filePath) {
         } else {
           std::cout << year << '-' << std::setw(2) << std::setfill('0') << mon
                     << '-' << std::setw(2) << std::setfill('0') << tm.tm_mday
-                    << " => " << val * scl << std::endl;
+                    << " => " << std::fixed << std::setprecision(2)
+                    << val * scl << std::endl;
         }
       }
     } else {
