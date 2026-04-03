@@ -22,17 +22,19 @@ int main(int argc, char **argv) {
         const long long vec_start = get_us();
         PmergeMe::sort(vec_ls.first);
         const long long vec_end = get_us();
-        const long long ls_start = get_us();
-        PmergeMe::sort(vec_ls.second);
-        const long long ls_end = get_us();
+        // const long long ls_start = get_us();
+        // PmergeMe::sort(vec_ls.second);
+        // const long long ls_end = get_us();
         PmergeMe::display_vec(vec_ls.first, "After: ");
         std::cout << "Elapsed time to sort " << vec_ls.first.size()
                   << " elements with "
                   << "std::vector: "
                   << static_cast<double>(vec_end - vec_start)
-                  << "µs, with std::list: "
-                  << static_cast<double>(ls_end - ls_start)
+                  // << "µs, with std::list: "
+                  // << static_cast<double>(ls_end - ls_start)
                   << "µs." << std::endl;
+        std::cout << std::boolalpha << std::is_sorted(vec_ls.first.begin(), vec_ls.first.end())
+                  << std::endl;
     } catch (std::exception &e) {
         std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
         return 1;

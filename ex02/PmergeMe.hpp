@@ -18,7 +18,7 @@
 
 class PmergeMe {
     static void sort_chains(std::vector<std::pair<size_t *, size_t *> > &);
-    static void sort_chains(std::list<std::pair<size_t *, size_t *> > &);
+    // static void sort_chains(std::list<std::pair<size_t *, size_t *> > &);
 
     static size_t get_nth_jacobsthal(size_t);
 
@@ -40,7 +40,7 @@ class PmergeMe {
                             char const *) throw(std::runtime_error);
 
     static void sort(std::vector<size_t> &);
-    static void sort(std::list<size_t> &);
+    // static void sort(std::list<size_t> &);
 
     template <typename T>
     static std::ostringstream &try_print(std::ostringstream &oss, T val) {
@@ -61,7 +61,7 @@ class PmergeMe {
         return oss;
     }
 
-    struct ChainCmp {
+    struct PtrChainLargerCmp {
         bool operator()(const std::pair<size_t *, size_t *> &a,
                         const std::pair<size_t *, size_t *> &b) const;
     };
