@@ -22,22 +22,23 @@ int main(int argc, char **argv) {
     const long long vec_start = get_us();
     PmergeMe::sort(vec_ls.first);
     const long long vec_end = get_us();
-    // const long long ls_start = get_us();
-    // PmergeMe::sort(vec_ls.second);
-    // const long long ls_end = get_us();
+    const long long ls_start = get_us();
+    PmergeMe::sort(vec_ls.second);
+    const long long ls_end = get_us();
     PmergeMe::display_vec(vec_ls.first, "After: ");
     std::cout << "Elapsed time to sort " << vec_ls.first.size()
               << " elements with "
-              << "std::vector: "
-              << static_cast<double>(vec_end - vec_start)
-              // << "µs, with std::list: "
-              // << static_cast<double>(ls_end - ls_start)
+              << "std::vector: " << static_cast<double>(vec_end - vec_start)
+              << "µs" << std::endl
+              << "with std::list: " << static_cast<double>(ls_end - ls_start)
               << "µs." << std::endl;
     std::vector<size_t> unsorted;
-    for (size_t i = 0; i < vec_ls.first.size() - 1; i++) {
-      if (vec_ls.first[i] > vec_ls.first[i + 1]) {
+    std::list<size_t>::iterator it = vec_ls.second.begin();
+    for (size_t i = 0; i < vec_ls.second.size() - 1; i++, it++) {
+      if (*it > *(++it)) {
         unsorted.push_back(i);
       }
+      --it;
     }
     PmergeMe::display_vec(unsorted, "unsorted are:  ");
   } catch (std::exception &e) {

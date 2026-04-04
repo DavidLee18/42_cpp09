@@ -204,153 +204,148 @@ size_t PmergeMe::get_nth_jacobsthal(const size_t n) {
   return static_cast<size_t>(((1 << (n + 1)) + (n % 2 == 1 ? -1 : 1)) / 3);
 }
 
-// void PmergeMe::sort(std::list<size_t> &ls) {
-//     if (ls.size() < 2)
-//         return;
-//     std::list<std::pair<size_t *, size_t *> > chain;
-//     std::list<size_t>::iterator it = ls.begin();
-//     for (size_t i = 0; i < ls.size() / 2 && it != ls.end(); i++, ++it) {
-//         size_t *prev = &*it;
-//         ++it;
-//         if (it == ls.end())
-//             break;
-//         if (*prev <= *it)
-//             chain.push_back(std::make_pair(prev, &*it));
-//         else
-//             chain.push_back(std::make_pair(&*it, prev));
-//     }
-//     if (chain.size() >= 2)
-//         PmergeMe::sort_chains(chain);
-//     std::list<size_t> res;
-//
-//     std::list<std::pair<size_t *, size_t *> >::iterator jt = chain.begin();
-//     for (size_t i = 0; i < ls.size() / 2 && i < chain.size(); i++, ++jt)
-//         res.push_back(*jt->second);
-//
-//     res.insert(res.begin(), *chain.begin()->first);
-//     size_t last_j = 0;
-//     for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= chain.size(); i++)
-//     {
-//         last_j = PmergeMe::get_nth_jacobsthal(i);
-//         jt = chain.begin();
-//         for (size_t j = 0; j < last_j; j++, ++jt) {
-//         }
-//         for (size_t j = last_j; j > PmergeMe::get_nth_jacobsthal(i - 1);
-//              j--, --jt) {
-//             std::list<size_t>::iterator kt = res.begin();
-//             for (size_t k = 0; k < 2 * j - 1 && k < res.size(); k++, ++kt) {
-//             }
-//             res.insert(std::lower_bound(res.begin(), kt, *jt->first),
-//                        *jt->first);
-//         }
-//     }
-//
-//     jt = --chain.end();
-//     for (size_t i = chain.size(); i > last_j; i--, --jt) {
-//         std::list<size_t>::iterator kt = res.begin();
-//         for (size_t k = 0; k < 2 * i - 1 && k < res.size(); k++, ++kt) {
-//         }
-//         res.insert(std::lower_bound(res.begin(), kt, *jt->first),
-//         *jt->first);
-//     }
-//
-//     if (ls.size() % 2 == 1)
-//         res.insert(std::lower_bound(res.begin(), res.end(), ls.back()),
-//                    ls.back());
-//     ls.swap(res);
-// }
-//
-// void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain)
-// {
-//     if (chain.size() < 2)
-//         return;
-//     std::list<std::pair<size_t *, size_t *> > subchain;
-//     std::list<std::pair<size_t *, size_t *> >::iterator it = chain.begin();
-//     for (size_t i = 0; i < chain.size() / 2 && it != chain.end(); i++, ++it)
-//     {
-//         size_t *prev = it->second;
-//         ++it;
-//         if (it == chain.end())
-//             break;
-//         if (*prev <= *it->second)
-//             subchain.push_back(std::make_pair(prev, it->second));
-//         else
-//             subchain.push_back(std::make_pair(it->second, prev));
-//     }
-//     if (subchain.size() >= 2)
-//         PmergeMe::sort_chains(subchain);
-//     std::list<std::pair<size_t *, size_t *> > res;
-//
-//     std::list<std::pair<size_t *, size_t *> >::iterator jt =
-//     subchain.begin(); for (size_t i = 0;
-//          i < chain.size() / 2 && i < subchain.size() && jt != subchain.end();
-//          i++, ++jt) {
-//         for (it = chain.begin(); it != chain.end(); ++it) {
-//             if (it->second == jt->second) {
-//                 res.push_back(*it);
-//                 break;
-//             }
-//         }
-//     }
-//
-//     for (it = chain.begin(); it != chain.end(); ++it) {
-//         if (it->second == subchain.begin()->first) {
-//             res.insert(
-//                 std::lower_bound(res.begin(), ++res.begin(), *it,
-//                 VecChainLargerCmp()), *it);
-//             break;
-//         }
-//     }
-//
-//     size_t last_j = 0;
-//     std::list<std::pair<size_t *, size_t *> >::iterator kt;
-//     for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= subchain.size();
-//          i++) {
-//         last_j = PmergeMe::get_nth_jacobsthal(i);
-//         jt = subchain.begin();
-//         for (size_t j = 0; j < last_j; j++, ++jt) {
-//         }
-//         for (size_t j = last_j; j > PmergeMe::get_nth_jacobsthal(i - 1);
-//              j--, --jt) {
-//             for (it = chain.begin(); it != chain.end(); ++it) {
-//                 if (it->second == jt->first) {
-//                     kt = res.begin();
-//                     for (size_t k = 0; k < 2 * j - 1 && kt != res.end();
-//                          k++, ++kt) {
-//                     }
-//                     res.insert(
-//                         std::lower_bound(res.begin(), kt, *it,
-//                         VecChainLargerCmp()), *it);
-//                     break;
-//                 }
-//             }
-//             if (jt == subchain.begin())
-//                 break;
-//         }
-//     }
-//
-//     jt = --subchain.end();
-//     for (size_t i = subchain.size(); i > last_j; i--, --jt) {
-//         for (it = chain.begin(); it != chain.end(); ++it) {
-//             if (it->second == jt->first) {
-//                 kt = res.begin();
-//                 for (size_t k = 0; k < 2 * i - 1 && kt != res.end();
-//                      k++, ++kt) {
-//                 }
-//                 res.insert(std::lower_bound(res.begin(), kt, *it,
-//                 VecChainLargerCmp()),
-//                            *it);
-//                 break;
-//             }
-//         }
-//     }
-//
-//     if (chain.size() % 2 == 1)
-//         res.insert(
-//             std::lower_bound(res.begin(), res.end(), chain.back(),
-//             VecChainLargerCmp()), chain.back());
-//     chain.swap(res);
-// }
+void PmergeMe::sort(std::list<size_t> &ls) {
+  if (ls.size() < 2)
+    return;
+  std::list<std::pair<size_t *, size_t *> > chain;
+  std::list<size_t>::iterator it = ls.begin();
+  for (size_t i = 0; i < ls.size() / 2; i++, ++it) {
+    size_t *prev = &*it;
+    ++it;
+    if (it == ls.end())
+      break;
+    if (*prev <= *it)
+      chain.push_back(std::make_pair(prev, &*it));
+    else
+      chain.push_back(std::make_pair(&*it, prev));
+  }
+  if (chain.size() >= 2)
+    PmergeMe::sort_chains(chain);
+  std::list<size_t> res;
+
+  std::list<std::pair<size_t *, size_t *> >::iterator jt = chain.begin();
+  for (size_t i = 0; i < chain.size(); i++, ++jt)
+    res.push_back(*jt->second);
+
+  res.insert(res.begin(), *chain.begin()->first);
+  size_t last_j;
+  size_t i_;
+  for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= chain.size(); i_++) {
+    last_j = PmergeMe::get_nth_jacobsthal(i_);
+    const size_t last_last_j = PmergeMe::get_nth_jacobsthal(i_ - 1);
+    jt = chain.begin();
+    std::advance(jt, last_j);
+    for (size_t j = last_j; j > last_last_j; j--, --jt) {
+      it = res.begin();
+      std::advance(it, std::min(last_j + last_last_j - 1, res.size()));
+      std::list<size_t>::iterator lt =
+          std::lower_bound(res.begin(), it, *jt->first);
+      res.insert(lt, *jt->first);
+    }
+  }
+
+  jt = --chain.end();
+  for (size_t i = chain.size(), j = PmergeMe::get_nth_jacobsthal(i_ + 1);
+       i > last_j; i--, --jt) {
+    it = res.begin();
+    std::advance(it, std::min(j + last_j - 1, res.size()));
+    std::list<size_t>::iterator lt =
+        std::lower_bound(res.begin(), it, *jt->first);
+    res.insert(lt, *jt->first);
+  }
+
+  if (ls.size() % 2 == 1) {
+    std::list<size_t>::iterator kt =
+        std::lower_bound(res.begin(), res.end(), ls.back());
+    res.insert(kt, ls.back());
+  }
+  ls.swap(res);
+}
+
+void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
+  if (chain.size() < 2)
+    return;
+  std::list<std::pair<size_t *, size_t *> > subchain;
+  std::list<std::pair<size_t *, size_t *> >::iterator it = chain.begin();
+  for (size_t i = 0; i < chain.size() / 2; i++, ++it) {
+    size_t *prev = it->second;
+    ++it;
+    if (it == chain.end())
+      break;
+    if (*prev <= *it->second)
+      subchain.push_back(std::make_pair(prev, it->second));
+    else
+      subchain.push_back(std::make_pair(it->second, prev));
+  }
+  if (subchain.size() >= 2)
+    PmergeMe::sort_chains(subchain);
+  std::list<std::pair<size_t *, size_t *> > res;
+
+  std::list<std::pair<size_t *, size_t *> >::iterator jt = subchain.begin();
+  for (size_t i = 0; i < subchain.size(); i++, ++jt) {
+    for (it = chain.begin(); it != chain.end(); ++it) {
+      if (it->second == jt->second) {
+        res.push_back(*it);
+        break;
+      }
+    }
+  }
+
+  for (it = chain.begin(); it != chain.end(); ++it) {
+    if (it->second == subchain.begin()->first) {
+      std::list<std::pair<size_t *, size_t *> >::iterator jt = std::lower_bound(
+          res.begin(), ++res.begin(), *it, PtrChainLargerCmp());
+      res.insert(jt, *it);
+      break;
+    }
+  }
+
+  size_t last_j;
+  size_t i_;
+  std::list<std::pair<size_t *, size_t *> >::iterator kt;
+  for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= subchain.size(); i_++) {
+    last_j = PmergeMe::get_nth_jacobsthal(i_);
+    const size_t last_last_j = PmergeMe::get_nth_jacobsthal(i_ - 1);
+    jt = subchain.begin();
+    std::advance(jt, last_j);
+    for (size_t j = last_j; j > last_last_j; j--, --jt) {
+      for (it = chain.begin(); it != chain.end(); ++it) {
+        if (it->second == jt->first) {
+          kt = res.begin();
+          std::advance(kt, std::min(last_j + last_last_j - 1, res.size()));
+          std::list<std::pair<size_t *, size_t *> >::iterator lt =
+              std::lower_bound(res.begin(), kt, *it, PtrChainLargerCmp());
+          res.insert(lt, *it);
+          break;
+        }
+      }
+      if (jt == subchain.begin())
+        break;
+    }
+  }
+
+  jt = --subchain.end();
+  for (size_t i = subchain.size(), j = PmergeMe::get_nth_jacobsthal(i_ + 1);
+       i > last_j; i--, --jt) {
+    for (it = chain.begin(); it != chain.end(); ++it) {
+      if (it->second == jt->first) {
+        kt = res.begin();
+        std::advance(kt, std::min(j + last_j - 1, res.size()));
+        std::list<std::pair<size_t *, size_t *> >::iterator lt =
+            std::lower_bound(res.begin(), kt, *it, PtrChainLargerCmp());
+        res.insert(lt, *it);
+        break;
+      }
+    }
+  }
+
+  if (chain.size() % 2 == 1) {
+    std::list<std::pair<size_t *, size_t *> >::iterator mt = std::lower_bound(
+        res.begin(), res.end(), chain.back(), PtrChainLargerCmp());
+    res.insert(mt, chain.back());
+  }
+  chain.swap(res);
+}
 
 PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp() : ptr(NULL) {}
 
