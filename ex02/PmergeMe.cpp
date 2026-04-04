@@ -76,14 +76,15 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
 
   res.insert(res.begin(), *chain[0].first);
 
-  size_t last_j = 0;
-  for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= chain.size(); i++) {
-    for (size_t j = (last_j = PmergeMe::get_nth_jacobsthal(i));
-         j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
+  size_t last_j;
+  size_t i_;
+  for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= chain.size(); i_++) {
+    const size_t last_last_j = PmergeMe::get_nth_jacobsthal(i_ - 1);
+    for (size_t j = (last_j = PmergeMe::get_nth_jacobsthal(i_));
+         j > last_last_j; j--) {
       std::vector<size_t>::iterator it = std::lower_bound(
           res.begin(),
-          res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                            std::min(2 * j - 1, res.size())),
+          res.begin() + std::min(last_j + last_last_j - 1, res.size()),
           *chain[j - 1].first);
       if (it == res.end())
         res.push_back(*chain[j - 1].first);
@@ -91,11 +92,10 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
         res.insert(it, *chain[j - 1].first);
     }
   }
-  for (size_t i = chain.size(); i > last_j; i--) {
+  for (size_t i = chain.size(), j = PmergeMe::get_nth_jacobsthal(i_ + 1);
+       i > last_j; i--) {
     std::vector<size_t>::iterator it = std::lower_bound(
-        res.begin(),
-        res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                          std::min(2 * i - 1, res.size())),
+        res.begin(), res.begin() + std::min(j + last_j - 1, res.size()),
         *chain[i - 1].first);
     if (it == res.end())
       res.push_back(*chain[i - 1].first);
@@ -133,55 +133,59 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
   std::vector<std::pair<size_t *, size_t *> > res;
 
   for (size_t i = 0; i < sub_chain.size(); ++i) {
-    res.push_back(*std::find_if(chain.begin(), chain.end(),
-                                PmergeMe::PtrChainLargerCmp(&sub_chain[i])));
-  }
-
-  res.insert(res.begin(),
-             *std::find_if(chain.begin(), chain.end(),
-                           PmergeMe::PtrChainSmallerCmp(&sub_chain[0])));
-
-  size_t last_j = 0;
-  for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= sub_chain.size(); i++) {
-    last_j = PmergeMe::get_nth_jacobsthal(i);
-    for (size_t j = last_j; j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
-      std::vector<std::pair<size_t *, size_t *> >::iterator point =
-          std::find_if(chain.begin(), chain.end(),
-                       PmergeMe::PtrChainSmallerCmp(&sub_chain[j - 1]));
-      if (point == chain.end()) {
-        std::cerr << "not found: " << j - 1 << "th sub_chain" << std::endl;
-        continue;
+    for (size_t j = 0; j < chain.size(); j++) {
+      if (chain[j].second == sub_chain[i].second) {
+        res.push_back(chain[j]);
+        break;
       }
-      std::vector<std::pair<size_t *, size_t *> >::iterator it =
-          std::lower_bound(
-              res.begin(),
-              res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                                std::min(2 * j - 1, res.size())),
-              *point, PmergeMe::PtrChainLargerCmp());
-      if (it == res.end())
-        res.push_back(*point);
-      else
-        res.insert(it, *point);
     }
   }
 
-  for (size_t i = sub_chain.size(); i > last_j; i--) {
-    std::vector<std::pair<size_t *, size_t *> >::iterator point =
-        std::find_if(chain.begin(), chain.end(),
-                     PmergeMe::PtrChainSmallerCmp(&sub_chain[i - 1]));
-    if (point == chain.end()) {
-      std::cerr << "not found: " << i - 1 << "th sub_chain" << std::endl;
-      continue;
+  for (size_t i = 0; i < chain.size(); i++) {
+    if (chain[i].second == sub_chain[0].first) {
+      res.insert(res.begin(), chain[i]);
+      break;
     }
-    std::vector<std::pair<size_t *, size_t *> >::iterator it = std::lower_bound(
-        res.begin(),
-        res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                          std::min(2 * i - 1, res.size())),
-        *point, PmergeMe::PtrChainLargerCmp());
-    if (it == res.end())
-      res.push_back(*point);
-    else
-      res.insert(it, *point);
+  }
+
+  size_t last_j;
+  size_t i_;
+  for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= sub_chain.size(); i_++) {
+    last_j = PmergeMe::get_nth_jacobsthal(i_);
+    const size_t last_last_j = PmergeMe::get_nth_jacobsthal(i_ - 1);
+    for (size_t j = last_j; j > last_last_j; j--) {
+      for (size_t k = 0; k < chain.size(); k++) {
+        if (chain[k].second == sub_chain[j - 1].first) {
+          std::vector<std::pair<size_t *, size_t *> >::iterator it =
+              std::lower_bound(
+                  res.begin(),
+                  res.begin() + std::min(last_j + last_last_j - 1, res.size()),
+                  chain[k], PmergeMe::PtrChainLargerCmp());
+          if (it == res.end())
+            res.push_back(chain[k]);
+          else
+            res.insert(it, chain[k]);
+          break;
+        }
+      }
+    }
+  }
+
+  for (size_t i = sub_chain.size(), k = PmergeMe::get_nth_jacobsthal(i_ + 1);
+       i > last_j; i--) {
+    for (size_t j = 0; j < chain.size(); j++) {
+      if (chain[j].second == sub_chain[i - 1].first) {
+        std::vector<std::pair<size_t *, size_t *> >::iterator it =
+            std::lower_bound(res.begin(),
+                             res.begin() + std::min(k + last_j - 1, res.size()),
+                             chain[j], PmergeMe::PtrChainLargerCmp());
+        if (it == res.end())
+          res.push_back(chain[j]);
+        else
+          res.insert(it, chain[j]);
+        break;
+      }
+    }
   }
 
   if (chain.size() % 2 == 1) {
@@ -357,8 +361,7 @@ PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp(
 bool PmergeMe::PtrChainLargerCmp::operator()(
     const std::pair<size_t *, size_t *> &a,
     const std::pair<size_t *, size_t *> &b) const {
-  return reinterpret_cast<size_t>(a.second) <
-         reinterpret_cast<size_t>(b.second);
+  return *a.second < *b.second;
 }
 
 bool PmergeMe::PtrChainLargerCmp::operator()(

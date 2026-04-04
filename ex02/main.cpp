@@ -33,12 +33,13 @@ int main(int argc, char **argv) {
               // << "µs, with std::list: "
               // << static_cast<double>(ls_end - ls_start)
               << "µs." << std::endl;
-    bool sorted = true;
+    std::vector<size_t> unsorted;
     for (size_t i = 0; i < vec_ls.first.size() - 1; i++) {
-      sorted &= (vec_ls.first[i] <= vec_ls.first[i + 1]);
+      if (vec_ls.first[i] > vec_ls.first[i + 1]) {
+        unsorted.push_back(i);
+      }
     }
-    std::cout << "std::vector is " << (sorted ? "sorted." : "not sorted.")
-              << std::endl;
+    PmergeMe::display_vec(unsorted, "unsorted are:  ");
   } catch (std::exception &e) {
     std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
     return 1;
