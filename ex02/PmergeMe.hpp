@@ -63,8 +63,18 @@ public:
   }
 
   struct PtrChainLargerCmp {
+    const std::pair<size_t *, size_t *> *ptr;
+    PtrChainLargerCmp();
+    PtrChainLargerCmp(std::pair<size_t *, size_t *> const *);
     bool operator()(const std::pair<size_t *, size_t *> &a,
                     const std::pair<size_t *, size_t *> &b) const;
+    bool operator()(const std::pair<size_t *, size_t *> &);
+  };
+
+  struct PtrChainSmallerCmp {
+    std::pair<size_t *, size_t *> const *ptr;
+    PtrChainSmallerCmp(std::pair<size_t *, size_t *> const *);
+    bool operator()(std::pair<size_t *, size_t *> const &);
   };
 };
 

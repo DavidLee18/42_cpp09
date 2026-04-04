@@ -1,6 +1,7 @@
 #include "PmergeMe.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -70,7 +71,6 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
     PmergeMe::sort_chains(chain);
   std::vector<size_t> res;
 
-  res.reserve(vec.size());
   for (size_t i = 0; i < chain.size(); i++)
     res.push_back(*chain[i].second);
 
@@ -80,28 +80,37 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
   for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= chain.size(); i++) {
     for (size_t j = (last_j = PmergeMe::get_nth_jacobsthal(i));
          j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
-      res.insert(
-          std::lower_bound(
-              res.begin(),
-              res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                                std::min(2 * j - 1, res.size())),
-              *chain[j - 1].first),
+      std::vector<size_t>::iterator it = std::lower_bound(
+          res.begin(),
+          res.begin() + static_cast<std::vector<size_t>::difference_type>(
+                            std::min(2 * j - 1, res.size())),
           *chain[j - 1].first);
+      if (it == res.end())
+        res.push_back(*chain[j - 1].first);
+      else
+        res.insert(it, *chain[j - 1].first);
     }
   }
   for (size_t i = chain.size(); i > last_j; i--) {
-    res.insert(
-        std::lower_bound(res.begin(),
-                         res.begin() +
-                             static_cast<std::vector<size_t>::difference_type>(
-                                 std::min(2 * i - 1, res.size())),
-                         *chain[i - 1].first),
+    std::vector<size_t>::iterator it = std::lower_bound(
+        res.begin(),
+        res.begin() + static_cast<std::vector<size_t>::difference_type>(
+                          std::min(2 * i - 1, res.size())),
         *chain[i - 1].first);
+    if (it == res.end())
+      res.push_back(*chain[i - 1].first);
+    else
+      res.insert(it, *chain[i - 1].first);
   }
 
-  if (vec.size() % 2 == 1)
-    res.insert(std::lower_bound(res.begin(), res.end(), vec.back()),
-               vec.back());
+  if (vec.size() % 2 == 1) {
+    std::vector<size_t>::iterator it =
+        std::lower_bound(res.begin(), res.end(), vec.back());
+    if (it == res.end())
+      res.push_back(vec.back());
+    else
+      res.insert(it, vec.back());
+  }
   vec.swap(res);
 }
 
@@ -109,9 +118,8 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
   if (chain.size() < 2)
     return;
   std::vector<std::pair<size_t *, size_t *> > sub_chain;
-  sub_chain.reserve(chain.size() / 2);
   for (size_t i = 0; i < chain.size() / 2; i++) {
-    if (chain[2 * i].second <= chain[2 * i + 1].second) {
+    if (*chain[2 * i].second <= *chain[2 * i + 1].second) {
       sub_chain.push_back(
           std::make_pair(chain[2 * i].second, chain[2 * i + 1].second));
     } else {
@@ -123,62 +131,67 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
   if (sub_chain.size() >= 2)
     PmergeMe::sort_chains(sub_chain);
   std::vector<std::pair<size_t *, size_t *> > res;
-  res.reserve(chain.size());
 
   for (size_t i = 0; i < sub_chain.size(); ++i) {
-    for (size_t j = 0; j < chain.size(); ++j) {
-      if (chain[j].second == sub_chain[i].second) {
-        res.push_back(chain[j]);
-        break;
-      }
-    }
+    res.push_back(*std::find_if(chain.begin(), chain.end(),
+                                PmergeMe::PtrChainLargerCmp(&sub_chain[i])));
   }
 
-  for (size_t i = 0; i < chain.size(); ++i) {
-    if (chain[i].second == sub_chain[0].first) {
-      res.insert(res.begin(), chain[i]);
-      break;
-    }
-  }
+  res.insert(res.begin(),
+             *std::find_if(chain.begin(), chain.end(),
+                           PmergeMe::PtrChainSmallerCmp(&sub_chain[0])));
 
   size_t last_j = 0;
   for (size_t i = 1; PmergeMe::get_nth_jacobsthal(i) <= sub_chain.size(); i++) {
     last_j = PmergeMe::get_nth_jacobsthal(i);
     for (size_t j = last_j; j > PmergeMe::get_nth_jacobsthal(i - 1); j--) {
-      for (size_t k = 0; k < chain.size(); ++k) {
-        if (chain[k].second == sub_chain[j - 1].first) {
-          res.insert(std::lower_bound(
-                         res.begin(),
-                         res.begin() +
-                             static_cast<std::vector<size_t>::difference_type>(
-                                 std::min(2 * j - 1, res.size())),
-                         chain[k], PmergeMe::PtrChainLargerCmp()),
-                     chain[k]);
-          break;
-        }
+      std::vector<std::pair<size_t *, size_t *> >::iterator point =
+          std::find_if(chain.begin(), chain.end(),
+                       PmergeMe::PtrChainSmallerCmp(&sub_chain[j - 1]));
+      if (point == chain.end()) {
+        std::cerr << "not found: " << j - 1 << "th sub_chain" << std::endl;
+        continue;
       }
+      std::vector<std::pair<size_t *, size_t *> >::iterator it =
+          std::lower_bound(
+              res.begin(),
+              res.begin() + static_cast<std::vector<size_t>::difference_type>(
+                                std::min(2 * j - 1, res.size())),
+              *point, PmergeMe::PtrChainLargerCmp());
+      if (it == res.end())
+        res.push_back(*point);
+      else
+        res.insert(it, *point);
     }
   }
 
   for (size_t i = sub_chain.size(); i > last_j; i--) {
-    for (size_t k = 0; k < chain.size(); ++k) {
-      if (chain[k].second == sub_chain[i - 1].first) {
-        res.insert(
-            std::lower_bound(
-                res.begin(),
-                res.begin() + static_cast<std::vector<size_t>::difference_type>(
-                                  std::min(2 * i - 1, res.size())),
-                chain[k], PmergeMe::PtrChainLargerCmp()),
-            chain[k]);
-        break;
-      }
+    std::vector<std::pair<size_t *, size_t *> >::iterator point =
+        std::find_if(chain.begin(), chain.end(),
+                     PmergeMe::PtrChainSmallerCmp(&sub_chain[i - 1]));
+    if (point == chain.end()) {
+      std::cerr << "not found: " << i - 1 << "th sub_chain" << std::endl;
+      continue;
     }
+    std::vector<std::pair<size_t *, size_t *> >::iterator it = std::lower_bound(
+        res.begin(),
+        res.begin() + static_cast<std::vector<size_t>::difference_type>(
+                          std::min(2 * i - 1, res.size())),
+        *point, PmergeMe::PtrChainLargerCmp());
+    if (it == res.end())
+      res.push_back(*point);
+    else
+      res.insert(it, *point);
   }
 
-  if (chain.size() % 2 == 1)
-    res.insert(std::lower_bound(res.begin(), res.end(), chain.back(),
-                                PmergeMe::PtrChainLargerCmp()),
-               chain.back());
+  if (chain.size() % 2 == 1) {
+    std::vector<std::pair<size_t *, size_t *> >::iterator it = std::lower_bound(
+        res.begin(), res.end(), chain.back(), PmergeMe::PtrChainLargerCmp());
+    if (it == res.end())
+      res.push_back(chain.back());
+    else
+      res.insert(it, chain.back());
+  }
 
   chain.swap(res);
 }
@@ -335,8 +348,31 @@ size_t PmergeMe::get_nth_jacobsthal(const size_t n) {
 //     chain.swap(res);
 // }
 
+PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp() : ptr(NULL) {}
+
+PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp(
+    std::pair<size_t *, size_t *> const *ptr)
+    : ptr(ptr) {}
+
 bool PmergeMe::PtrChainLargerCmp::operator()(
     const std::pair<size_t *, size_t *> &a,
     const std::pair<size_t *, size_t *> &b) const {
-  return *a.second < *b.second;
+  return reinterpret_cast<size_t>(a.second) <
+         reinterpret_cast<size_t>(b.second);
+}
+
+bool PmergeMe::PtrChainLargerCmp::operator()(
+    std::pair<size_t *, size_t *> const &a) {
+  return reinterpret_cast<size_t>(ptr->second) <
+         reinterpret_cast<size_t>(a.second);
+}
+
+PmergeMe::PtrChainSmallerCmp::PtrChainSmallerCmp(
+    std::pair<size_t *, size_t *> const *ptr)
+    : ptr(ptr) {}
+
+bool PmergeMe::PtrChainSmallerCmp::operator()(
+    std::pair<size_t *, size_t *> const &x) {
+  return reinterpret_cast<size_t>(ptr->first) <
+         reinterpret_cast<size_t>(x.second);
 }
