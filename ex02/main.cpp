@@ -33,7 +33,11 @@ int main(int argc, char **argv) {
                   // << "µs, with std::list: "
                   // << static_cast<double>(ls_end - ls_start)
                   << "µs." << std::endl;
-        std::cout << std::boolalpha << std::is_sorted(vec_ls.first.begin(), vec_ls.first.end())
+        bool sorted = true;
+        for (size_t i = 0; i < vec_ls.first.size() - 1; i++) {
+            sorted &= (vec_ls.first[i] <= vec_ls.first[i + 1]);
+        }
+        std::cout << "std::vector is " << (sorted ? "sorted." : "not sorted.")
                   << std::endl;
     } catch (std::exception &e) {
         std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
