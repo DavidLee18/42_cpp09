@@ -16,8 +16,8 @@ RPN &RPN::operator=(RPN const &other) {
   return *this;
 }
 
-unsigned short RPN::calc(std::string const &expr) throw(std::logic_error) {
-  unsigned short a = 0, b = 0;
+short RPN::calc(std::string const &expr) throw(std::logic_error) {
+  short a = 0, b = 0;
   std::istringstream iss(expr);
   std::string tok;
   while (iss >> tok) {
@@ -38,7 +38,7 @@ unsigned short RPN::calc(std::string const &expr) throw(std::logic_error) {
     unsigned char op = static_cast<unsigned char>(tok[0]);
     switch (op) {
     case '-':
-      reg.push(a - b);
+      reg.push(b - a);
       break;
     case '+':
       reg.push(a + b);
@@ -47,10 +47,10 @@ unsigned short RPN::calc(std::string const &expr) throw(std::logic_error) {
       reg.push(a * b);
       break;
     case '/':
-      if (b == 0) {
+      if (a == 0) {
 		throw std::logic_error("division by zero");
 	  }
-      reg.push(a / b);
+      reg.push(b / a);
       break;
     default:
       if (static_cast<bool>(std::isdigit(static_cast<int>(op)))) {

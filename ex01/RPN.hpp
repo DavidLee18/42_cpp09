@@ -6,7 +6,7 @@
 #include <string>
 
 class RPN {
-  std::stack<unsigned short> reg;
+  std::stack<short> reg;
 
 public:
   RPN();
@@ -14,7 +14,7 @@ public:
   ~RPN();
 
   RPN &operator=(RPN const &);
-  unsigned short calc(std::string const &) throw(std::logic_error);
+  short calc(std::string const &) throw(std::logic_error);
 };
 
 #endif
