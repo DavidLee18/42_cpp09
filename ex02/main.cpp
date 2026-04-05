@@ -32,15 +32,6 @@ int main(int argc, char **argv) {
               << "µs" << std::endl
               << "with std::list: " << static_cast<double>(ls_end - ls_start)
               << "µs." << std::endl;
-    std::vector<size_t> unsorted;
-    std::list<size_t>::iterator it = vec_ls.second.begin();
-    for (size_t i = 0; i < vec_ls.second.size() - 1; i++, it++) {
-      if (*it > *(++it)) {
-        unsorted.push_back(i);
-      }
-      --it;
-    }
-    PmergeMe::display_vec(unsorted, "unsorted are:  ");
   } catch (std::exception &e) {
     std::cerr << "operation PmergeMe failed: " << e.what() << std::endl;
     return 1;
