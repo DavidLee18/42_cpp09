@@ -6,45 +6,45 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <unistd.h>
 
-BitcoinExchange::BitcoinExchange() throw(std::runtime_error) : db() {
+BitcoinExchange::BitcoinExchange() : db() {
   char buffer[256];
+
   if (getcwd(buffer, sizeof(buffer)) == NULL) {
-    throw std::runtime_error("cannot get PWD: " +
-                             std::string(std::strerror(errno)));
+    invalid = true;
+    return;
   }
+
   const std::string path(buffer + std::string("/data.csv"));
   std::ifstream input(path.c_str());
+
   if (input.fail() || !input.is_open()) {
-    throw std::runtime_error("opening " + path + " failed");
+    invalid = true;
+    return;
   }
+
   std::string line;
-  struct tm tm;
-  std::memset(&tm, 0, sizeof(tm));
-  float val = 0.0f;
-  int mon = 0, year = 0;
   while (std::getline(input, line)) {
     if (line == "date,exchange_rate")
       continue;
-    if (sscanf(line.c_str(), "%d-%d-%d,%f", &year, &mon, &tm.tm_mday, &val) ==
-        4) {
-      tm.tm_year = year - 1900;
-      tm.tm_mon = mon - 1;
-      tm.tm_isdst = -1;
-      struct tm otm = tm;
-      std::mktime(&tm);
-      if (otm.tm_year != tm.tm_year || otm.tm_mon != tm.tm_mon ||
-          otm.tm_mday != tm.tm_mday) {
-        throw std::runtime_error("invalid date in database");
-      }
-      std::pair<std::map<std::time_t, float>::iterator, bool> res =
-          db.insert(std::make_pair(std::mktime(&tm), val));
-      if (!res.second) {
-        throw std::runtime_error("map insertion error in database");
-      }
-    } else {
-      throw std::runtime_error("invalid format in database");
+
+    std::pair<std::pair<struct tm, float>, bool> parsed =
+        parse_line("%d-%d-%d,%f", line.c_str());
+    if (!parsed.second) {
+      invalid = true;
+      return;
+    }
+
+    struct tm tm = parsed.first.first;
+    float val = parsed.first.second;
+
+    std::pair<std::map<std::time_t, float>::iterator, bool> res =
+        db.insert(std::make_pair(std::mktime(&tm), val));
+    if (!res.second) {
+      invalid = true;
+      return;
     }
   }
 }
@@ -60,59 +60,71 @@ BitcoinExchange &BitcoinExchange::operator=(BitcoinExchange const &other) {
   return *this;
 }
 
-void BitcoinExchange::calcPrice(std::string const &filePath) {
+bool BitcoinExchange::calcPrice(std::string const &filePath) {
   char buffer[256];
-  if (getcwd(buffer, sizeof(buffer)) == NULL) {
-    throw std::runtime_error("cannot get PWD: " +
-                             std::string(std::strerror(errno)));
-  }
+
+  if (getcwd(buffer, sizeof(buffer)) == NULL)
+    return false;
+
   const std::string path(buffer + std::string("/") + filePath);
   std::ifstream input(path.c_str());
-  if (input.fail() || !input.is_open()) {
-    throw std::runtime_error("error opening " + path);
-  }
+
+  if (input.fail() || !input.is_open())
+    return false;
+
   std::string line;
+
+  while (std::getline(input, line)) {
+    if (line == "date | value")
+      continue;
+    std::pair<std::pair<struct tm, float>, bool> parsed =
+        parse_line("%d-%d-%d | %f", line.c_str());
+    float val = parsed.first.second;
+    if (!parsed.second || val < 0 || val > 1000) {
+      return false;
+    } else {
+      float scl = NAN;
+      struct tm tm = parsed.first.first;
+      const std::time_t t = std::mktime(&tm);
+
+      std::map<std::time_t, float>::iterator it = db.lower_bound(t);
+      if (it != db.begin())
+        scl = (--it)->second;
+
+      if (std::isnan(scl))
+        return false;
+      std::cout << tm << " => " << std::fixed << std::setprecision(2)
+                << val * scl << std::endl;
+    }
+  }
+
+  return true;
+}
+
+std::pair<std::pair<struct tm, float>, bool> parse_date(const char *fmt,
+                                                        const char *str) {
   struct tm tm;
   std::memset(&tm, 0, sizeof(tm));
   float val = 0.0f;
   int mon = 0, year = 0;
-  while (std::getline(input, line)) {
-    if (line == "date | value")
-      continue;
-    if (sscanf(line.c_str(), "%d-%d-%d | %f", &year, &mon, &tm.tm_mday, &val) ==
-        4) {
-      tm.tm_year = year - 1900;
-      tm.tm_mon = mon - 1;
-      tm.tm_isdst = -1;
-      struct tm otm = tm;
-      std::mktime(&tm);
-      if (otm.tm_year != tm.tm_year || otm.tm_mon != tm.tm_mon ||
-          otm.tm_mday != tm.tm_mday) {
-        std::cerr << "invalid date: " << year << '-' << std::setw(2)
-                  << std::setfill('0') << mon << '-' << std::setw(2)
-                  << std::setfill('0') << otm.tm_mday << std::endl;
-      } else if (val < 0 || val > 1000) {
-        std::cerr << "value out of range: " << val << std::endl;
-      } else {
-        float scl = NAN;
-        const std::time_t t = std::mktime(&tm);
-        std::map<std::time_t, float>::iterator it = db.lower_bound(t);
-        if (it != db.begin()) {
-            scl = (--it)->second;
-        }
-        if (std::isnan(scl)) {
-          std::cerr << "no value for date: " << year << '-' << std::setw(2)
-                    << std::setfill('0') << mon << '-' << std::setw(2)
-                    << std::setfill('0') << tm.tm_mday << std::endl;
-        } else {
-          std::cout << year << '-' << std::setw(2) << std::setfill('0') << mon
-                    << '-' << std::setw(2) << std::setfill('0') << tm.tm_mday
-                    << " => " << std::fixed << std::setprecision(2)
-                    << val * scl << std::endl;
-        }
-      }
-    } else {
-      std::cerr << "invalid format: " << line << std::endl;
-    }
+  if (sscanf(str, fmt, &year, &mon, &tm.tm_mday, &val) == 4) {
+    tm.tm_year = year - 1900;
+    tm.tm_mon = mon - 1;
+    tm.tm_isdst = -1;
+    struct tm otm = tm;
+    std::mktime(&tm);
+
+    if (otm.tm_year != tm.tm_year || otm.tm_mon != tm.tm_mon ||
+        otm.tm_mday != tm.tm_mday)
+      return std::make_pair(std::make_pair((struct tm){}, NAN), false);
+    return std::make_pair(std::make_pair(tm, val), true);
   }
+  return std::make_pair(std::make_pair((struct tm){}, NAN), false);
+}
+
+std::ostream &operator<<(std::ostream &os, struct tm _tm) {
+  os << _tm.tm_year - 1900 << '-' << std::setw(2) << std::setfill('0')
+     << _tm.tm_mon + 1 << '-' << std::setw(2) << std::setfill('0')
+     << _tm.tm_mday;
+  return os;
 }

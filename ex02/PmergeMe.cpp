@@ -61,11 +61,10 @@ void PmergeMe::sort(std::vector<size_t> &vec) {
     return;
   std::vector<std::pair<size_t *, size_t *> > chain;
   for (size_t i = 0; i < vec.size() / 2; i++) {
-    if (vec[2 * i] <= vec[2 * i + 1]) {
+    if (vec[2 * i] <= vec[2 * i + 1])
       chain.push_back(std::make_pair(&vec[2 * i], &vec[2 * i + 1]));
-    } else {
+    else
       chain.push_back(std::make_pair(&vec[2 * i + 1], &vec[2 * i]));
-    }
   }
   if (chain.size() >= 2)
     PmergeMe::sort_chains(chain);
@@ -119,13 +118,12 @@ void PmergeMe::sort_chains(std::vector<std::pair<size_t *, size_t *> > &chain) {
     return;
   std::vector<std::pair<size_t *, size_t *> > sub_chain;
   for (size_t i = 0; i < chain.size() / 2; i++) {
-    if (*chain[2 * i].second <= *chain[2 * i + 1].second) {
+    if (*chain[2 * i].second <= *chain[2 * i + 1].second)
       sub_chain.push_back(
           std::make_pair(chain[2 * i].second, chain[2 * i + 1].second));
-    } else {
+    else
       sub_chain.push_back(
           std::make_pair(chain[2 * i + 1].second, chain[2 * i].second));
-    }
   }
 
   if (sub_chain.size() >= 2)
@@ -207,8 +205,10 @@ size_t PmergeMe::get_nth_jacobsthal(const size_t n) {
 void PmergeMe::sort(std::list<size_t> &ls) {
   if (ls.size() < 2)
     return;
+
   std::list<std::pair<size_t *, size_t *> > chain;
   std::list<size_t>::iterator it = ls.begin();
+
   for (size_t i = 0; i < ls.size() / 2; i++, ++it) {
     size_t *prev = &*it;
     ++it;
@@ -219,6 +219,7 @@ void PmergeMe::sort(std::list<size_t> &ls) {
     else
       chain.push_back(std::make_pair(&*it, prev));
   }
+
   if (chain.size() >= 2)
     PmergeMe::sort_chains(chain);
   std::list<size_t> res;
@@ -228,6 +229,7 @@ void PmergeMe::sort(std::list<size_t> &ls) {
     res.push_back(*jt->second);
 
   res.insert(res.begin(), *chain.begin()->first);
+
   size_t last_j;
   size_t i_;
   for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= chain.size(); i_++) {
@@ -265,8 +267,10 @@ void PmergeMe::sort(std::list<size_t> &ls) {
 void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
   if (chain.size() < 2)
     return;
+
   std::list<std::pair<size_t *, size_t *> > subchain;
   std::list<std::pair<size_t *, size_t *> >::iterator it = chain.begin();
+
   for (size_t i = 0; i < chain.size() / 2; i++, ++it) {
     size_t *prev = it->second;
     ++it;
@@ -277,6 +281,7 @@ void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
     else
       subchain.push_back(std::make_pair(it->second, prev));
   }
+
   if (subchain.size() >= 2)
     PmergeMe::sort_chains(subchain);
   std::list<std::pair<size_t *, size_t *> > res;
@@ -301,16 +306,19 @@ void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
   size_t last_j;
   size_t i_;
   std::list<std::pair<size_t *, size_t *> >::iterator kt;
+
   for (i_ = 1; PmergeMe::get_nth_jacobsthal(i_) <= subchain.size(); i_++) {
     last_j = PmergeMe::get_nth_jacobsthal(i_);
     const size_t last_last_j = PmergeMe::get_nth_jacobsthal(i_ - 1);
     jt = subchain.begin();
     std::advance(jt, last_j - 1);
+
     for (size_t j = last_j; j > last_last_j; j--, --jt) {
       for (it = chain.begin(); it != chain.end(); ++it) {
         if (it->second == jt->first) {
           kt = res.begin();
           std::advance(kt, std::min(last_j + last_last_j - 1, res.size()));
+
           std::list<std::pair<size_t *, size_t *> >::iterator lt =
               std::lower_bound(res.begin(), kt, *it, PtrChainLargerCmp());
           res.insert(lt, *it);
@@ -330,6 +338,7 @@ void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
       if (it->second == jt->first) {
         kt = res.begin();
         std::advance(kt, std::min(j + last_j - 1, res.size()));
+
         std::list<std::pair<size_t *, size_t *> >::iterator lt =
             std::lower_bound(res.begin(), kt, *it, PtrChainLargerCmp());
         res.insert(lt, *it);
@@ -346,30 +355,8 @@ void PmergeMe::sort_chains(std::list<std::pair<size_t *, size_t *> > &chain) {
   chain.swap(res);
 }
 
-PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp() : ptr(NULL) {}
-
-PmergeMe::PtrChainLargerCmp::PtrChainLargerCmp(
-    std::pair<size_t *, size_t *> const *ptr)
-    : ptr(ptr) {}
-
 bool PmergeMe::PtrChainLargerCmp::operator()(
     const std::pair<size_t *, size_t *> &a,
     const std::pair<size_t *, size_t *> &b) const {
   return *a.second < *b.second;
-}
-
-bool PmergeMe::PtrChainLargerCmp::operator()(
-    std::pair<size_t *, size_t *> const &a) {
-  return reinterpret_cast<size_t>(ptr->second) <
-         reinterpret_cast<size_t>(a.second);
-}
-
-PmergeMe::PtrChainSmallerCmp::PtrChainSmallerCmp(
-    std::pair<size_t *, size_t *> const *ptr)
-    : ptr(ptr) {}
-
-bool PmergeMe::PtrChainSmallerCmp::operator()(
-    std::pair<size_t *, size_t *> const &x) {
-  return reinterpret_cast<size_t>(ptr->first) <
-         reinterpret_cast<size_t>(x.second);
 }
