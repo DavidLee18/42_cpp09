@@ -4,12 +4,11 @@
 #include <ctime>
 #include <map>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 
 class BitcoinExchange {
   std::map<std::time_t, float> db;
-  bool invalid;
+  std::string error_msg;
 
 public:
   BitcoinExchange();
@@ -17,7 +16,8 @@ public:
   ~BitcoinExchange();
 
   BitcoinExchange &operator=(BitcoinExchange const &);
-  bool calcPrice(std::string const &);
+  std::string calcPrice(std::string const &);
+  std::string const &get_error_msg();
 };
 
 std::pair<std::pair<struct tm, float>, bool> parse_line(const char *,

@@ -7,13 +7,14 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
+#include <sstream>
 #include <unistd.h>
 
 BitcoinExchange::BitcoinExchange() : db() {
   char buffer[256];
 
   if (getcwd(buffer, sizeof(buffer)) == NULL) {
-    invalid = true;
+    error_msg = "cannot get PWD" + std::string(strerror(errno));
     return;
   }
 
@@ -21,7 +22,7 @@ BitcoinExchange::BitcoinExchange() : db() {
   std::ifstream input(path.c_str());
 
   if (input.fail() || !input.is_open()) {
-    invalid = true;
+    error_msg = "failed to open " + path;
     return;
   }
 
@@ -33,7 +34,7 @@ BitcoinExchange::BitcoinExchange() : db() {
     std::pair<std::pair<struct tm, float>, bool> parsed =
         parse_line("%d-%d-%d,%f", line.c_str());
     if (!parsed.second) {
-      invalid = true;
+      error_msg = "invalid format: " + line;
       return;
     }
 
@@ -43,7 +44,7 @@ BitcoinExchange::BitcoinExchange() : db() {
     std::pair<std::map<std::time_t, float>::iterator, bool> res =
         db.insert(std::make_pair(std::mktime(&tm), val));
     if (!res.second) {
-      invalid = true;
+      error_msg = "failed to insert";
       return;
     }
   }
@@ -60,17 +61,17 @@ BitcoinExchange &BitcoinExchange::operator=(BitcoinExchange const &other) {
   return *this;
 }
 
-bool BitcoinExchange::calcPrice(std::string const &filePath) {
+std::string BitcoinExchange::calcPrice(std::string const &filePath) {
   char buffer[256];
 
   if (getcwd(buffer, sizeof(buffer)) == NULL)
-    return false;
+    return "failed to get PWD: " + std::string(strerror(errno));
 
   const std::string path(buffer + std::string("/") + filePath);
   std::ifstream input(path.c_str());
 
   if (input.fail() || !input.is_open())
-    return false;
+    return "failed to open " + path;
 
   std::string line;
 
@@ -80,8 +81,12 @@ bool BitcoinExchange::calcPrice(std::string const &filePath) {
     std::pair<std::pair<struct tm, float>, bool> parsed =
         parse_line("%d-%d-%d | %f", line.c_str());
     float val = parsed.first.second;
-    if (!parsed.second || val < 0 || val > 1000) {
-      return false;
+    if (!parsed.second) {
+      std::cerr << "invalid format: " << line << std::endl;
+      continue;
+    } else if (val < 0 || val > 1000) {
+      std::cerr << "value out of range: " << val << std::endl;
+      continue;
     } else {
       float scl = NAN;
       struct tm tm = parsed.first.first;
@@ -90,18 +95,22 @@ bool BitcoinExchange::calcPrice(std::string const &filePath) {
       std::map<std::time_t, float>::iterator it = db.lower_bound(t);
       if (it != db.begin())
         scl = (--it)->second;
+      else
+        scl = it->second;
 
       if (std::isnan(scl))
-        return false;
+        return "cannot calculate NAN";
       std::cout << tm << " => " << std::fixed << std::setprecision(2)
                 << val * scl << std::endl;
     }
   }
 
-  return true;
+  return "";
 }
 
-std::pair<std::pair<struct tm, float>, bool> parse_date(const char *fmt,
+std::string const &BitcoinExchange::get_error_msg() { return error_msg; }
+
+std::pair<std::pair<struct tm, float>, bool> parse_line(const char *fmt,
                                                         const char *str) {
   struct tm tm;
   std::memset(&tm, 0, sizeof(tm));
@@ -123,7 +132,7 @@ std::pair<std::pair<struct tm, float>, bool> parse_date(const char *fmt,
 }
 
 std::ostream &operator<<(std::ostream &os, struct tm _tm) {
-  os << _tm.tm_year - 1900 << '-' << std::setw(2) << std::setfill('0')
+  os << _tm.tm_year + 1900 << '-' << std::setw(2) << std::setfill('0')
      << _tm.tm_mon + 1 << '-' << std::setw(2) << std::setfill('0')
      << _tm.tm_mday;
   return os;

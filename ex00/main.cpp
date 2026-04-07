@@ -1,5 +1,4 @@
 #include "BitcoinExchange.hpp"
-#include <exception>
 #include <iostream>
 
 int main(int argc, char **argv) {
@@ -7,11 +6,15 @@ int main(int argc, char **argv) {
     std::cerr << "usage: " << argv[0] << " <input file>" << std::endl;
     return 1;
   }
-  try {
-    BitcoinExchange bitex;
-    bitex.calcPrice(argv[1]);
-  } catch (std::exception &e) {
-    std::cerr << "error trying to calc value: " << e.what() << std::endl;
+  BitcoinExchange bitex;
+  if (!bitex.get_error_msg().empty()) {
+    std::cerr << "failed to init " << argv[0] << ": " << bitex.get_error_msg()
+              << std::endl;
+    return 1;
+  }
+  std::string err(bitex.calcPrice(argv[1]));
+  if (!err.empty()) {
+    std::cerr << "failed to calc: " << err << std::endl;
     return 1;
   }
   return 0;
