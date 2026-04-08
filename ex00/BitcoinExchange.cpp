@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
-#include <sstream>
 #include <unistd.h>
 
 BitcoinExchange::BitcoinExchange() : db() {
